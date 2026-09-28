@@ -102,6 +102,12 @@ export const professionalSchema = z.object({
   phone: z.string().trim().max(30).optional(),
   email: z.string().trim().email('E-mail invalide').max(120).optional(),
   address: z.string().trim().max(200).optional(),
+  /** Position (géocodée depuis l'adresse ou importée d'OpenStreetMap) pour le tri par distance. */
+  lat: z.number().min(-90).max(90).optional(),
+  lon: z.number().min(-180).max(180).optional(),
+  /** Identifiant OpenStreetMap quand le pro a été ajouté depuis « Autour de moi ». */
+  osmId: z.string().max(40).optional(),
+  website: z.string().trim().max(200).optional(),
   notes: z.string().max(2000).optional(),
 });
 export type Professional = z.infer<typeof professionalSchema>;
