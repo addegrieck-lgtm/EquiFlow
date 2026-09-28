@@ -309,11 +309,13 @@ button {
 
 .list-row__title {
   font-weight: 500;
+  overflow-wrap: anywhere;
 }
 
 .list-row__subtitle {
   color: var(--color-text-muted);
   font-size: var(--text-small);
+  overflow-wrap: anywhere;
 }
 
 .list-row__chevron {

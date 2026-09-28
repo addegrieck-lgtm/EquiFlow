@@ -1,7 +1,7 @@
 /* EQUIFLOW — service worker : fonctionnement 100 % hors-ligne.
    - navigation : réseau d'abord, repli sur le cache (index.html)
    - fichiers statiques (JS/CSS/icônes) : cache d'abord, mis à jour en arrière-plan */
-const VERSION = 'equiflow-v0.1.0';
+const VERSION = 'equiflow-v1.0.0';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
 
 // À l'installation : cœur de l'app + bundles JS/CSS référencés par index.html (noms hachés par Vite).

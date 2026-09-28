@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import '@fontsource-variable/inter';
 import '@fontsource-variable/fraunces';
 import './design/global.css';
+import './design/screens.css';
 import { App } from './app/App';
 import { applyTheme, injectThemeCss, watchSystemTheme } from './design/theme';
 

@@ -110,7 +110,88 @@ export function parseOverpass(json: { elements?: OverpassElement[] }, kind: Near
 const OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
 
-export async function fetchNearby(kind: NearbyKind, origin: LatLon, radiusKm = 25, signal?: AbortSignal): Promise<Place[]> {
+/**
+ * Recherche par catégorie via Nominatim (« phrases spéciales » OpenStreetMap), plus fiable depuis
+ * un navigateur qu'Overpass. Seules les catégories réellement équestres / vétérinaires sont gardées.
+ */
+const NOMINATIM_SEARCH: Partial<Record<NearbyKind, { phrase: string; accept: (category: string, type: string) => boolean }>> = {
+  vet: { phrase: 'vétérinaire', accept: (c, t) => c === 'amenity' && t === 'veterinary' },
+  stable: { phrase: 'centre équestre', accept: (c, t) => (c === 'leisure' && t === 'horse_riding') || (c === 'amenity' && t === 'stable') },
+};
+
+export interface NominatimResult {
+  osm_type: string;
+  osm_id: number;
+  lat: string;
+  lon: string;
+  name?: string;
+  display_name: string;
+  category: string;
+  type: string;
+  extratags?: Record<string, string> | null;
+  address?: Record<string, string>;
+}
+
+/** Boîte englobante (gauche, haut, droite, bas) d'un cercle de rayon r km. */
+export function viewbox(origin: LatLon, radiusKm: number): string {
+  const dLat = radiusKm / 111;
+  const dLon = radiusKm / (111 * Math.max(0.2, Math.cos((origin.lat * Math.PI) / 180)));
+  return [origin.lon - dLon, origin.lat + dLat, origin.lon + dLon, origin.lat - dLat].map((n) => n.toFixed(4)).join(',');
+}
+
+export function parseNominatim(results: NominatimResult[], kind: NearbyKind, origin: LatLon, radiusKm: number): Place[] {
+  const spec = NOMINATIM_SEARCH[kind];
+  const seen = new Set<string>();
+  const places: Place[] = [];
+  for (const r of results) {
+    if (spec && !spec.accept(r.category, r.type)) continue;
+    const name = r.name?.trim();
+    if (!name) continue;
+    const osmId = `${r.osm_type}/${r.osm_id}`;
+    if (seen.has(osmId)) continue;
+    seen.add(osmId);
+    const lat = Number(r.lat);
+    const lon = Number(r.lon);
+    const d = distanceKm(origin, { lat, lon });
+    if (d > radiusKm) continue; // la boîte est carrée : on retire les coins hors du cercle
+    const a = r.address ?? {};
+    const t = r.extratags ?? {};
+    const street = [a.house_number, a.road].filter(Boolean).join(' ');
+    const city = [a.postcode, a.city ?? a.town ?? a.village ?? a.municipality].filter(Boolean).join(' ');
+    places.push({
+      osmId,
+      kind,
+      name,
+      lat,
+      lon,
+      distanceKm: d,
+      phone: t.phone ?? t['contact:phone'],
+      email: t.email ?? t['contact:email'],
+      website: t.website ?? t['contact:website'],
+      address: [street, city].filter(Boolean).join(', ') || undefined,
+    });
+  }
+  return places.sort((a, b) => a.distanceKm - b.distanceKm);
+}
+
+async function fetchNominatim(kind: NearbyKind, origin: LatLon, radiusKm: number, signal?: AbortSignal): Promise<Place[]> {
+  const spec = NOMINATIM_SEARCH[kind]!;
+  const params = new URLSearchParams({
+    q: spec.phrase,
+    format: 'jsonv2',
+    viewbox: viewbox(origin, radiusKm),
+    bounded: '1',
+    limit: '50',
+    extratags: '1',
+    addressdetails: '1',
+    'accept-language': 'fr',
+  });
+  const res = await fetch(`${NOMINATIM_URL}?${params}`, { signal, referrerPolicy: 'origin' });
+  if (!res.ok) throw new Error('Recherche impossible pour le moment, réessayez dans une minute.');
+  return parseNominatim(await res.json(), kind, origin, radiusKm);
+}
+
+async function fetchOverpass(kind: NearbyKind, origin: LatLon, radiusKm: number, signal?: AbortSignal): Promise<Place[]> {
   const res = await fetch(OVERPASS_URL, {
     method: 'POST',
     body: new URLSearchParams({ data: buildOverpassQuery(kind, origin, radiusKm) }),
@@ -118,6 +199,17 @@ export async function fetchNearby(kind: NearbyKind, origin: LatLon, radiusKm = 2
   });
   if (!res.ok) throw new Error(res.status === 429 ? 'Service OpenStreetMap saturé, réessayez dans une minute.' : 'Recherche impossible pour le moment.');
   return parseOverpass(await res.json(), kind, origin);
+}
+
+export async function fetchNearby(kind: NearbyKind, origin: LatLon, radiusKm = 25, signal?: AbortSignal): Promise<Place[]> {
+  if (NOMINATIM_SEARCH[kind]) return fetchNominatim(kind, origin, radiusKm, signal);
+  // Maréchaux et selleries : Overpass, souvent saturé ; délai court et message clair.
+  const timeout = AbortSignal.timeout?.(15_000);
+  try {
+    return await fetchOverpass(kind, origin, radiusKm, signal ?? timeout);
+  } catch {
+    throw new Error('Le service OpenStreetMap pour cette catégorie ne répond pas. Ces professionnels y sont de toute façon peu référencés : demandez à votre écurie ou ajoutez-les à la main.');
+  }
 }
 
 /** Adresse → coordonnées (premier résultat). */

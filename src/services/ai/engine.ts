@@ -4,7 +4,7 @@
  * 3. calculs déterministes → 4. réponse étiquetée (donnée / calcul / suggestion / incertain).
  * Aucun appel réseau : les réponses sont exactes, reproductibles et testées.
  */
-import { CARE_LABELS, DISCIPLINE_LABELS, DOCUMENT_LABELS, EVENT_LABELS, EXPENSE_LABELS, HORSE_STATUS_LABELS, SEX_LABELS, TRADE_LABELS } from '../../domain/labels';
+import { CARE_LABELS, DISCIPLINE_LABELS, DOCUMENT_LABELS, EXPENSE_LABELS, HORSE_STATUS_LABELS, SEX_LABELS, TRADE_LABELS } from '../../domain/labels';
 import type { CareType, DocumentCategory, ExpenseCategory, Horse, Trade } from '../../domain/models';
 import { addDays, ageFromYear, formatDate, formatLong, relativeDays } from '../../lib/dates';
 import { formatDuration, formatMoney, normalize, plural } from '../../lib/format';

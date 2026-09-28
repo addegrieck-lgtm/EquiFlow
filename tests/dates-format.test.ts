@@ -1,4 +1,4 @@
-import { addDays, addMonths, diffDays, endOfMonth, lastMonths, relativeDays, startOfWeek, formatDate } from '../src/lib/dates';
+import { addDays, addMonths, diffDays, endOfMonth, lastMonths, relativeDays, startOfWeek, formatDate, formatLong } from '../src/lib/dates';
 import { formatDuration, formatMoney, normalize, parseMoney } from '../src/lib/format';
 
 describe('dates civiles', () => {
@@ -32,6 +32,8 @@ describe('dates civiles', () => {
 
   it('formate en français', () => {
     expect(formatDate('2026-09-28')).toBe('28/09/2026');
+    expect(formatLong('2026-10-01')).toBe('jeudi 1er octobre');
+    expect(formatLong('2026-10-11')).toBe('dimanche 11 octobre');
     expect(relativeDays('2026-10-12', '2026-09-28')).toBe('dans 14 jours');
     expect(relativeDays('2026-09-29', '2026-09-28')).toBe('demain');
     expect(relativeDays('2026-09-25', '2026-09-28')).toBe('il y a 3 jours');

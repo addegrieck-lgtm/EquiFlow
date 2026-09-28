@@ -1,7 +1,9 @@
 import { defineConfig, type Plugin } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 
-// Politique de sécurité du contenu : aucune ressource externe, aucun script inline.
+// Politique de sécurité du contenu : aucun script externe ni inline. Seules connexions sortantes :
+// OpenStreetMap (Overpass + Nominatim), sur action explicite « Autour de moi ».
+// 'wasm-unsafe-eval' : nécessaire au moteur OCR (WebAssembly), servi par l'app elle-même.
 // Injectée seulement au build (le serveur de dev Vite a besoin d'un script inline).
 const CSP = [
   "default-src 'self'",
@@ -9,9 +11,9 @@ const CSP = [
   "media-src 'self' blob:",
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self'",
-  "script-src 'self'",
+  "script-src 'self' 'wasm-unsafe-eval'",
   "worker-src 'self' blob:",
-  "connect-src 'self'",
+  "connect-src 'self' https://overpass-api.de https://nominatim.openstreetmap.org",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'none'",

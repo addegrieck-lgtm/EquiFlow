@@ -9,7 +9,7 @@ const ITEMS: { tab: Tab; label: string; icon: IconName }[] = [
   { tab: 'more', label: 'Plus', icon: 'menu' },
 ];
 
-export function TabBar({ current }: { current: Tab }) {
+export function TabBar({ current }: { current?: Tab }) {
   return (
     <nav className="tabbar" aria-label="Navigation principale">
       <ul className="tabbar__list">

@@ -4,25 +4,12 @@ import { QUICK_ACTIONS } from './quickActions';
 export function QuickActionsGrid({ onPick }: { onPick?: () => void }) {
   return (
     <div className="quick-grid">
-      {QUICK_ACTIONS.map((a) => {
-        const available = Boolean(a.href);
-        return (
-          <button
-            key={a.id}
-            type="button"
-            className="quick-action"
-            disabled={!available}
-            onClick={() => {
-              if (a.href) window.location.hash = a.href;
-              onPick?.();
-            }}
-          >
-            <Icon name={a.icon} />
-            <span>{a.label}</span>
-            {!available && <span className="muted small">{a.availableAt}</span>}
-          </button>
-        );
-      })}
+      {QUICK_ACTIONS.map((a) => (
+        <a key={a.id} className="quick-action" href={a.href} onClick={onPick} style={{ color: 'inherit', textDecoration: 'none' }}>
+          <Icon name={a.icon} />
+          <span>{a.label}</span>
+        </a>
+      ))}
     </div>
   );
 }

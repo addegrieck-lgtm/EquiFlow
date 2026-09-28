@@ -69,8 +69,11 @@ export function isBetween(iso: string, from: string, to: string): boolean {
 
 // --- Affichage --------------------------------------------------------------------------------
 
+/** « 1 octobre » → « 1er octobre » (usage français pour le premier du mois). */
+const premier = (s: string) => s.replace(/(^|\s)1 (?=\p{L})/u, '$11er ');
+
 const fmt = (iso: string, opts: Intl.DateTimeFormatOptions) =>
-  fromIso(iso).toLocaleDateString('fr-FR', { timeZone: 'UTC', ...opts });
+  premier(fromIso(iso).toLocaleDateString('fr-FR', { timeZone: 'UTC', ...opts }));
 
 /** 28/09/2026 */
 export const formatDate = (iso: string) => fmt(iso, { day: '2-digit', month: '2-digit', year: 'numeric' });
